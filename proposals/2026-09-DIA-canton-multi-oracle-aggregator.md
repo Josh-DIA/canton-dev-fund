@@ -36,7 +36,7 @@ The aggregator will:
 * provide reusable interfaces and examples for lending, collateral, tokenized assets, and settlement workflows; and  
 * operate as a provider-neutral public good that can ingest compatible inputs from authorized oracle and data providers.
 
-The published provider schema and integration documentation will allow any oracle or data provider to implement the aggregator interface. Admission of a provider to a specific deployment remains governed by that deployment's authorization policy, but use of the software and implementation of the interface will not require permission from DIA.
+The aggregator will consume the approved Canton/Kaiko Oracle Data Standard interfaces wherever applicable and will not define a competing data publication standard. Provider-specific adapters will map authorized inputs into the aggregator's evaluation layer only where necessary. Admission of a provider to a specific deployment remains governed by that deployment's authorization policy, but use of the software and implementation of supported interfaces will not require permission from DIA.
 
 # Problem
 
@@ -54,7 +54,24 @@ These risks are most acute in immutable or difficult-to-upgrade markets, but the
 
 The Canton Multi-Oracle Aggregator will provide a stable contract interface between consuming applications and authorized value providers. It will evaluate candidate observations and publish an accepted value only when the configured policy is satisfied.
 
-The provider-neutral observation schema will identify the value source and the authorized proposer or delivery path separately. This allows deployments to govern where a value originates and who may submit it without changing the consumer-facing interface.
+The aggregator will consume approved Canton/Kaiko Oracle Data Standard interfaces wherever applicable. Provider-specific adapters will preserve the value source and the authorized proposer or delivery path so deployments can govern where a value originates and who may submit it without changing the consumer-facing interface.
+
+## Relationship to Existing Canton Oracle Infrastructure
+
+The Multi-Oracle Aggregator is designed to compose with, rather than duplicate or compete with, existing Canton oracle and data initiatives:
+
+* **Canton/Kaiko Oracle Data Standard ([#113](https://github.com/canton-foundation/canton-dev-fund/pull/113)):** Defines the provider-agnostic data ontology and publication interfaces, standardizing the structure of on-ledger oracle data. The aggregator will consume these approved interfaces wherever applicable and will not introduce a competing publication standard.
+* **RedStone CAPS ([#497](https://github.com/canton-foundation/canton-dev-fund/pull/497)):** Provides privacy, lineage, entitlement, disclosure, and licensing controls for oracle payloads. The aggregator will not recreate the CAPS disclosure graph or licensing layer. Where an authorized CAPS payload is made available to the aggregator, it may be evaluated alongside other compatible authorized inputs under the configured quorum, freshness, deviation, and provider-health policies.
+* **DIA and other oracle-provider proposals:** Supply, sign, publish, or transport oracle data. The aggregator does not replace these provider integrations. It provides the downstream policy and evaluation layer that determines whether multiple authorized observations are sufficiently fresh and consistent to produce an accepted value.
+
+These components may therefore be composed as follows:
+
+1. Oracle providers publish data using approved Canton/Kaiko Oracle Data Standard interfaces wherever applicable.
+2. RedStone CAPS may provide privacy, lineage, entitlement, disclosure, and licensing controls.
+3. The Multi-Oracle Aggregator applies quorum, freshness, deviation, and provider-health policies to the authorized observations it receives.
+4. Canton applications consume the resulting accepted value through a consistent interface.
+
+A payload delivered through CAPS that implements the approved Canton/Kaiko Oracle Data Standard can therefore be consumed by the aggregator without redefining either upstream interface.
 
 There are two available configurations: consensus mode and guardian mode. Both are explained in more detail below.
 
@@ -130,7 +147,7 @@ The Multi-Oracle Aggregator introduces no change to the Canton protocol, Global 
 
 * Architecture and focused threat model covering provider unavailability, stale data, divergence, compromised proposers, governance misuse, incorrect authorization or disclosure configuration, and last-good-value behavior.  
 * Open-source Daml packages for provider registry, configuration, observations, consensus and guardian evaluation, accepted values, health states, and governance.  
-* Provider-neutral payload schema, conformance guidance, and ingestion interfaces, with a working DIA connector plus at least two additional provider or deterministic mock-provider paths for testing.  
+* Ingestion adapters and conformance guidance for the approved Canton/Kaiko Oracle Data Standard interfaces wherever applicable, with a working DIA connector plus at least two additional provider or deterministic mock-provider paths for testing. No competing data publication standard will be defined.
 * Event indexer and health dashboard or equivalent status view.  
 * SDK helpers, deployment scripts, test harnesses, reference consumer contracts, and configuration examples.  
 * DevNet and TestNet deployments using an operational Canton node.  
@@ -148,7 +165,7 @@ Funding request: Up to 8,400,000 CC, consisting of 6,400,000 CC for Milestones 1
 
 | Milestone | Timing | Deliverables | Objective acceptance criteria | Funding |
 | :---- | :---- | :---- | :---- | :---- |
-| 1. Specification and Canton architecture | Week 1 | Technical specification, Daml data model, authorization and disclosure model, focused threat model, provider-neutral schema, test plan, and operating responsibility matrix | Public specification repository; aggregator interfaces and state transitions documented; authorization roles and operational assumptions documented; Daml prototype compiles; committee/champion review comments addressed | 850,000 CC |
+| 1. Specification and Canton architecture | Week 1 | Technical specification, Daml data model, authorization and disclosure model, focused threat model, Canton/Kaiko Oracle Data Standard integration plan, RedStone CAPS composition plan, test plan, and operating responsibility matrix | Public specification repository; aggregator interfaces and state transitions documented; authorization roles and operational assumptions documented; Daml prototype compiles; committee/champion review comments addressed | 850,000 CC |
 | 2. Functional DevNet prototype | Weeks 2-3 | Provider registry, observation contracts, freshness/deviation validation, consensus mode, guardian mode, governance flows, Healthy and QuorumLost status events, and reference consumer | Reproducible DevNet deployment; transaction evidence for healthy and quorum-lost states; two-of-three consensus demonstration; primary-plus-two-guardian demonstration; negative tests reject unauthorized, stale, out-of-bounds, and divergent observations | 1,700,000 CC |
 | 3. Complete TestNet implementation | Weeks 4-6, followed by a 14-day evidence run that may overlap the security-review window | Production-oriented ingestion service; DIA connector; at least two additional provider or deterministic mock-provider connectors; monitoring/indexer; SDK helpers; deployment tooling; configurable authorization; node operations | At least 14 consecutive days of TestNet operation; at least 10 live or representative feed configurations using DIA inputs, matching third-party live inputs where available, and deterministic mock-provider inputs for coverage gaps; three provider paths; at least 5,000 aggregator transactions, defined as provider observations plus aggregator evaluations; documented provider disable and replacement without changing the consumer interface; dashboard reports provider health and aggregator state; integration tests and CI published | 2,550,000 CC |
 | 4. Security, reliability, and release candidate | Weeks 7-8 | Independent security review, remediation, load and failure testing, operator runbook, incident response, integration guide, reference configurations, and release candidate | Audit report delivered to the committee and publishable summary released; all critical/high findings remediated; fault tests demonstrate healthy and quorum-lost status handling, relayer interruption, governance time-delay enforcement, cancellation, and recovery behavior; release candidate tagged under the stated open-source license | 1,300,000 CC |
